@@ -258,18 +258,18 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # map the functions to execute - un / sup / semi-
     trainFunc, validationFunc = map_exec_func(args)
-
+    
+    # All the test is done in the training - do not need to call
+    if args.validation:
+        validationFunc(val_loader, networks, 999, args, {'logger': logger, 'queue': queue})
+        return
+     
     queue_loader = train_loader['UNSUP'] if 0.0 < args.p_semi < 1.0 else train_loader
 
     queue = initialize_queue(networks['C_EMA'], args.gpu, queue_loader, feat_size=args.sty_dim)
 
     # print all the argument
     print_args(args)
-
-    # All the test is done in the training - do not need to call
-    if args.validation:
-        validationFunc(val_loader, networks, 999, args, {'logger': logger, 'queue': queue})
-        return
 
     # For saving the model
     if not args.multiprocessing_distributed or (args.multiprocessing_distributed and args.rank % ngpus_per_node == 0):
